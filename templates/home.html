@@ -1,0 +1,376 @@
+{% extends "layout.html" %}
+{% block content %}
+    <style>
+        .card {
+            margin-bottom: 7px;
+            box-shadow: 2px 2px 3px 0px #a0a0a0;
+        }
+        .card-body {
+             -webkit-mask-image: -webkit-gradient(linear, left top,
+              left bottom, from(rgba(0,0,0,1)), to(rgba(0,0,0,0)));
+            height: 175px;
+            transition: height 2s;
+        }
+        .card-body-expanded {
+            -webkit-mask-image: none !important;
+            height: auto !important;
+
+        }
+        .card-text {
+            height: 200px;
+            overflow: hidden;
+            transition: height 2s;
+        }
+        .card-text-expanded {
+            height: auto !important;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+        }
+        .card-body:hover {
+            cursor: pointer;
+        }
+        .hospital-name {
+            margin: 0 !important;
+            line-height: 2 !important;
+        }
+        .vanish {
+            display: none !important;
+        }
+        #searchWrapper {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+        #searchInput {
+            width: 100%;
+        }
+        .right-float {
+            display: flex;
+            flex-direction: row;
+            align-items: center
+        }
+        @media screen and (min-width: 1000px) {
+            .ratingStars {
+                margin-right: 3px;
+            }
+            .fa-star {
+                color: orange;
+            }
+        }
+        @media screen and (max-width: 1000px) {
+            .ratingStars {
+                display: none;
+            }
+        }
+        .fa-check-circle {
+            color: green;
+        }
+        .fa-times-circle {
+            color: red;
+        }
+        .page-item {
+            cursor: pointer;
+        }
+        .active {
+            cursor: default !important;
+        }
+        .active:hover {
+            color: white !important;
+        }
+        .page-nav-wrapper {
+            display: flex;
+            justify-content: space-between;
+        }
+        .jump-page-wrapper {
+            display: flex;
+            justify-content: center;
+            justify-items: center;
+            align-content: center;
+            align-items: center;
+            flex-wrap: nowrap;
+        }
+        .jump-page-label {
+            width: 100px;
+            transition: all 2s;
+        }
+        .jump-submit {
+            margin-left: 5px;
+        }
+        #top-jump-submit {
+            display: none;
+        }
+        #bottom-jump-submit {
+            display: none;
+        }
+    </style>
+    <script>
+        var selectedSearch = "";
+        $(document).ready(function() {
+            $('.card-body').click(function() {
+                var clickedContentId = jQuery(this).attr("id");
+                var contentParent = $('#'+clickedContentId).parent();
+                $(contentParent).children('.card-body').toggleClass('card-body-expanded');
+                $(contentParent).find('.card-text').toggleClass('card-text-expanded');
+            });
+
+            $("#top-jump-input").keyup(function() {
+                $("#top-jump-input").val();
+                if($("#top-jump-input").val() > {{ lastnum }} || $("#top-jump-input").val() < 0) {
+                    $("#top-jump-submit").prop("disabled",true);
+                } else {
+                    $("#top-jump-submit").prop("disabled",false);
+                }
+            });
+            $("#top-jump-input").focus(function() {
+                $("#top-jump-submit").fadeIn();
+            });
+            $("#top-jump-input").focusout(function() {
+                $("#top-jump-submit").fadeOut();
+            });
+
+            $("#bottom-jump-input").keyup(function() {
+                $("#bottom-jump-input").val();
+                if($("#bottom-jump-input").val() > {{ lastnum }} || $("#bottom-jump-input").val() < 0) {
+                    $("#bottom-jump-submit").prop("disabled",true);
+                } else {
+                    $("#bottom-jump-submit").prop("disabled",false);
+                }
+            });
+            $("#bottom-jump-input").focus(function() {
+                $("#bottom-jump-submit").fadeIn();
+            });
+            $("#bottom-jump-input").focusout(function() {
+                $("#bottom-jump-submit").fadeOut();
+            });
+
+            $('.selectpicker').change(function () {
+                selectedSearch = $(this).find("option:selected").val();
+            });
+
+            document.getElementById("top-jump-input").addEventListener("keyup", function(event) {
+                event.preventDefault();
+                if (event.keyCode === 13) {
+                    document.getElementById("top-jump-submit").click();
+                }
+            });
+            document.getElementById("bottom-jump-input").addEventListener("keyup", function(event) {
+                event.preventDefault();
+                if (event.keyCode === 13) {
+                    document.getElementById("bottom-jump-submit").click();
+                }
+            });
+        });
+
+        function getURLParameter(name) {
+            return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(document.location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;
+        }
+
+        function updateQueryStringParameter(uri, key, value) {
+            var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
+            var separator = uri.indexOf('?') !== -1 ? "&" : "?";
+            if (uri.match(re)) {
+                var val = (Number(getURLParameter(key))+value)
+            if (val <= -1) val = 0;
+                return uri.replace(re, '$1' + key + "=" + val + '$2');
+            } else {
+                return uri + separator + key + "=" + value;
+            }
+        }
+
+        function changePage(offset) {
+            document.location.href = updateQueryStringParameter(document.location.href, "page", offset);
+        }
+
+        function jumpPageTop(current) {
+            document.location.href = updateQueryStringParameter(document.location.href, "page", document.getElementById("top-jump-input").value - current);
+        }
+
+        function jumpPageBottom(current) {
+            document.location.href = updateQueryStringParameter(document.location.href, "page", document.getElementById("bottom-jump-input").value - current);
+        }
+    </script>
+    <!-- Search form -->
+    <div id="content">
+        <form method="get" class="row" id="searchWrapper" style="margin-bottom: 0.5em">
+            <div class="col-md-3">
+                <label style="width: 100%">Hospital Name</label>
+                <input name="name" class="form-control" style="width: 100%" type="text" placeholder="Enter a Hospital Name"/>
+            </div>
+            <div class="col-md-3">
+                <label style="width: 100%">Star Rating</label>
+                <select name="stars" class="form-control" style="width: 100%">
+                    <option value="">Default</option>
+                    <option value="1">1 or more Stars</option>
+                    <option value="2">2 or more Stars</option>
+                    <option value="3">3 or more Stars</option>
+                    <option value="4">4 or more Stars</option>
+                    <option value="5">5 Stars</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label style="width: 100%">Zip Code</label>
+                <input name="zip" class="form-control" style="width: 100%" type="number" placeholder="Enter a Zip Code"/>
+            </div>
+            <div class="col-md-3">
+                <label style="width: 100%">&nbsp;</label>
+                <input class="btn btn-primary" style="width: 100%" type="submit" value="Search"/>
+            </div>
+        </form>
+        <div class="page-nav-wrapper">
+            <div class="nav-buttons">
+                <nav aria-label="page navigation">
+                    <ul class="pagination">
+                        {% if pagenum-1 >= 0 %}
+                        <li class="page-item">
+                            <a class="page-link" onclick="changePage(-1);" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                                <span class="sr-only">Previous</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% if pagenum-2 >= 0 %}
+                        <li class="page-item"><a class="page-link" onclick="changePage(-2);">{{ pagenum-2 }}</a></li>
+                        {% endif %}
+                        {% if pagenum-1 >= 0 %}
+                        <li class="page-item"><a class="page-link" onclick="changePage(-1);">{{ pagenum-1 }}</a></li>
+                        {% endif %}
+                        <li class="page-item active"><a class="page-link">{{ pagenum }}</a></li>
+                        {% if pagenum+1 <= lastnum %}
+                        <li class="page-item"><a class="page-link" onclick="changePage(1);">{{ pagenum+1 }}</a></li>
+                        {% endif %}
+                        {% if pagenum+2 <= lastnum %}
+                        <li class="page-item"><a class="page-link" onclick="changePage(2);">{{ pagenum+2 }}</a></li>
+                        {% endif %}
+                        {% if pagenum+1 <= lastnum %}
+                        <li class="page-item">
+                            <a class="page-link" onclick="changePage(1);" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                                <span class="sr-only">Next</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            <div class="jump-page-wrapper">
+                <label class="jump-page-label">Go to page</label>
+                <input type="number" id="top-jump-input" class="form-control" min="0" max="{{ lastnum }}">
+                <button type="submit" id="top-jump-submit" class="btn btn-primary jump-submit" onclick="jumpPageTop({{ pagenum }})">Go</button>
+            </div>
+        </div>
+        {% for hospital in hospitalDB %}
+        <div class="card" id="hospital-{{ hospital.id }}">
+            <div class="card-header" id="hospital-{{ hospital.id }}-header">
+                <h5 class="hospital-name">{{ hospital.name }}, {{ hospital.zip }}</h5>
+                <div class="right-float">
+                    {% if hospital.source == "medicare.gov" %}
+                        <div class="ratingStars">
+                            {% set hi = hospital.hospital_overall_rating | int %}
+                            {% for i in range(0,hi) %}
+                                <span class="fa fa-star"></span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                <a href="detail?firm={{hospital.id}}" class="btn btn-primary" style="float: right !important;">More Information</a>
+                </div>
+            </div>
+            <div class="card-body" id="hospital-{{ hospital.id }}-body">
+                <h5 class="card-title">General Information</h5>
+                <p class="card-text">
+                    {% if hospital.source == "medicare.gov" %}
+                        Overall Rating: {{ hospital.hospital_overall_rating }} <br>
+                        Hospital Type: {{ hospital.hospital_type }} <br>
+                        {% set emergencyService = hospital.emergency_services %}
+                        {% if emergencyService == True %}
+                            Emergency Services: <span class="fas fa-check-circle"></span> <br>
+                        {% else %}
+                            Emergency Services: <span class="fas fa-times-circle"></span> <br>
+                        {% endif %}
+                        Hospital Ownership: {{ hospital.hospital_ownership }} <br>
+                    {% else %}
+                        Hospital Type: {{ hospital.hospital_type }} <br>
+                        {% if hospital.trauma == "I" %}
+                            Trauma Center: <span class="fas fa-check-circle"></span> Level I <br>
+                        {% elif hospital.trauma == "II" %}
+                            Trauma Center: <span class="fas fa-check-circle"></span> Level II <br>
+                        {% elif hospital.trauma == "III" %}
+                            Trauma Center: <span class="fas fa-check-circle"></span> Level III <br>
+                        {% elif hospital.trauma == "IV" %}
+                            Trauma Center: <span class="fas fa-check-circle"></span> Level IV <br>
+                        {% elif hospital.trauma == "V" %}
+                            Trauma Center: <span class="fas fa-check-circle"></span> Level V <br>
+                        {% else %}
+                            Trauma Center: <span class="fas fa-times-circle"></span> <br>
+                        {% endif %}
+                        {% if hospital.helipad == "Y" or hospital.helipad == "AVAILABLE" %}
+                            Helipad: <span class="fas fa-check-circle"></span><br>
+                        {% else %}
+                            Helipad: <span class="fas fa-times-circle"></span> <br>
+                        {% endif %}
+                        Hospital Ownership: {{ hospital.hospital_ownership }}
+                    {% endif %}
+                </p>
+                <h5 class="card-title">Contact</h5>
+                <p class="card-text">
+                    {% if hospital.source == "medicare.gov" %}
+                        ({{ hospital.phone_number[0] }}{{ hospital.phone_number[1] }}{{ hospital.phone_number[2] }})
+                        {{ hospital.phone_number[3] }}{{ hospital.phone_number[4] }}{{ hospital.phone_number[5] }}-
+                        {{ hospital.phone_number[6] }}{{ hospital.phone_number[7] }}{{ hospital.phone_number[8] }} <br>
+                        {{ hospital.address }} <br>
+                        {{ hospital.city }}, {{ hospital.state }} {{ hospital.zip }}
+                    {% else %}
+                        <a href="{{ hospital.website }}" target="_blank">Website</a> <br>
+                        {{ hospital.phone_number }} <br>
+                        {{ hospital.address }} <br>
+                        {{ hospital.city }}, {{ hospital.state }} {{ hospital.zip }}
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="page-nav-wrapper">
+        <div class="nav-buttons">
+            <nav aria-label="page navigation">
+                <ul class="pagination">
+                    {% if pagenum-1 >= 0 %}
+                    <li class="page-item">
+                        <a class="page-link" onclick="changePage(-1);" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                            <span class="sr-only">Previous</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if pagenum-2 >= 0 %}
+                    <li class="page-item"><a class="page-link" onclick="changePage(-2);">{{ pagenum-2 }}</a></li>
+                    {% endif %}
+                    {% if pagenum-1 >= 0 %}
+                    <li class="page-item"><a class="page-link" onclick="changePage(-1);">{{ pagenum-1 }}</a></li>
+                    {% endif %}
+                    <li class="page-item active"><a class="page-link">{{ pagenum }}</a></li>
+                    {% if pagenum+1 <= lastnum %}
+                    <li class="page-item"><a class="page-link" onclick="changePage(1);">{{ pagenum+1 }}</a></li>
+                    {% endif %}
+                    {% if pagenum+2 <= lastnum %}
+                    <li class="page-item"><a class="page-link" onclick="changePage(2);">{{ pagenum+2 }}</a></li>
+                    {% endif %}
+                    {% if pagenum+1 <= lastnum %}
+                    <li class="page-item">
+                        <a class="page-link" onclick="changePage(1);" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                            <span class="sr-only">Next</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        <div class="jump-page-wrapper">
+            <label>Go to page</label>
+            <input type="number" id="bottom-jump-input" class="form-control" min="0" max="{{ lastnum }}">
+            <button type="submit" id="bottom-jump-submit" class="btn btn-primary jump-submit" onclick="jumpPageBottom({{ pagenum }})">Go</button>
+        </div>
+    </div>
+{% endblock content %}

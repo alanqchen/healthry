@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<style>
+        .card {
+            margin-bottom: 7px;
+            box-shadow: 2px 2px 3px 0px #a0a0a0;
+        }
+        .card-body {
+             -webkit-mask-image: -webkit-gradient(linear, left top,
+              left bottom, from(rgba(0,0,0,1)), to(rgba(0,0,0,0)));
+            height: 300px;
+            transition: height 2s;
+        }
+</style>
+<div id="content">
+    <div class="card">
+        <div class="card-header">
+            About
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Special thanks to Medicare.gov and Arcgis.com for providing the databases used on this website</h5>
+            <p class="card-text">This website is built on python for the backend, and CSS, JavaScript, and HTML for the frontend. Run on Flask webserver to bring it all together. Developed for HackCWRU 6.</p>
+            <a href="/" class="btn btn-primary">Go back home</a>
+        </div>
+    </div>
+</div>
+{% endblock content %}
